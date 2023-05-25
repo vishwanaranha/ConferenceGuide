@@ -1,7 +1,6 @@
 package com.va.conferenceguide.data.models
 import com.google.gson.annotations.SerializedName
 
-
 data class ConferenceListResult(
     @SerializedName("data")
     val `data`: List<Data>,
