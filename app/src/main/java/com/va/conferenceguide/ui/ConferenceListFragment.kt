@@ -85,9 +85,11 @@ private fun ConferenceListLayout(viewModel: ConferenceListViewModel, buildType: 
             is Resource.Loading -> {
                 LoadingLayout()
             }
+
             is Resource.Success -> {
                 SuccessLayout(conferenceListResult.data, paddingValues)
             }
+
             is Resource.Error -> {
                 ErrorLayout(conferenceListResult.error) {
                     viewModel.getConferenceList()

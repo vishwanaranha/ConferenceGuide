@@ -1,4 +1,4 @@
-package com.conferencedirectory.app.util
+package com.va.conferenceguide.util
 
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers

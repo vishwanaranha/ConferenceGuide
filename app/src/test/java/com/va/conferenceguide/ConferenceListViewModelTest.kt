@@ -1,11 +1,11 @@
-package com.conferencedirectory.app
+package com.va.conferenceguide
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import com.conferencedirectory.app.util.MainCoroutineRule
 import com.va.conferenceguide.data.models.ConferenceListResult
 import com.va.conferenceguide.data.networking.ConferenceListRepository
 import com.va.conferenceguide.data.networking.Resource
 import com.va.conferenceguide.ui.ConferenceListViewModel
+import com.va.conferenceguide.util.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
