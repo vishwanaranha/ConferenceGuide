@@ -1,3 +1,5 @@
 <resources>
-    <string name="app_name">Conference Guide</string>
+    <string name="app_name">Conference Directory</string>
+    <string name="loading">Please Wait…</string>
+    <string name="retry">Retry</string>
 </resources>
