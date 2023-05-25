@@ -28,7 +28,9 @@ list
 5. Added push notifications,
 6. enhanced UI and custom animations for visual improvements
 7. Would run health check for better performance and optimization
-8. Would have added more unit tests and a11y tests as needed.
+8. Added pull to refresh feature
+9. Would have added more unit tests and a11y tests as needed.
+10. Would have decided on a better app name than conference guide/directory.
 
 ## Libraries Used
 
