@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.skydoves.landscapist.glide.GlideImage
+import com.va.conferenceguide.BuildConfig
 import com.va.conferenceguide.R
 import com.va.conferenceguide.data.models.ConferenceListResult
 import com.va.conferenceguide.data.models.Data
