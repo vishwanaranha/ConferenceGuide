@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -13,14 +14,20 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Divider
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,8 +36,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.navigation.NavController
+import androidx.navigation.findNavController
 import com.skydoves.landscapist.glide.GlideImage
 import com.va.conferenceguide.BuildConfig
 import com.va.conferenceguide.R
@@ -38,14 +48,13 @@ import com.va.conferenceguide.data.models.ConferenceListResult
 import com.va.conferenceguide.data.models.Data
 import com.va.conferenceguide.data.networking.Resource
 
-
 class ConferenceListFragment : Fragment() {
 
     private val viewModel: ConferenceListViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        viewModel.getConferenceList()
+        loadData(viewModel = viewModel, isPullToRefresh = false)
     }
 
     override fun onCreateView(
@@ -56,15 +65,23 @@ class ConferenceListFragment : Fragment() {
             setContent {
                 val buildType = BuildConfig.BUILD_TYPE
                 MaterialTheme {
-                    ConferenceListLayout(viewModel = viewModel, buildType = buildType)
+                    ConferenceListLayout(
+                        viewModel = viewModel,
+                        buildType = buildType,
+                        navController = findNavController()
+                    )
                 }
             }
         }
     }
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
-private fun ConferenceListLayout(viewModel: ConferenceListViewModel, buildType: String) {
+private fun ConferenceListLayout(
+    viewModel: ConferenceListViewModel, buildType: String,
+    navController: NavController
+) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -81,28 +98,66 @@ private fun ConferenceListLayout(viewModel: ConferenceListViewModel, buildType: 
         },
         backgroundColor = MaterialTheme.colors.background
     ) { paddingValues ->
-        when (val conferenceListResult = viewModel.conferenceListResult.value) {
-            is Resource.Loading -> {
-                LoadingLayout()
-            }
 
-            is Resource.Success -> {
-                SuccessLayout(conferenceListResult.data, paddingValues)
-            }
+        val isRefreshing = viewModel.isRefreshing.value
 
-            is Resource.Error -> {
-                ErrorLayout(conferenceListResult.error) {
-                    viewModel.getConferenceList()
+        val pullRefreshState = rememberPullRefreshState(isRefreshing, {
+            loadData(viewModel = viewModel, isPullToRefresh = true)
+        })
+
+        ConstraintLayout(
+            modifier = Modifier
+                .fillMaxSize()
+                .pullRefresh(pullRefreshState)
+        ) {
+            val (pullRefresh) = createRefs()
+
+            Column(modifier = Modifier.fillMaxSize()) {
+                when (val conferenceListResult = viewModel.conferenceListResult.value) {
+                    is Resource.Loading -> {
+                        val loadingMessage = stringResource(
+                            id = if (isRefreshing)
+                                R.string.refreshing
+                            else
+                                R.string.loading
+                        )
+                        LoadingLayout(loadingMessage = loadingMessage)
+                    }
+                    is Resource.Success -> {
+                        SuccessLayout(conferenceListResult.data, paddingValues, navController)
+                    }
+                    is Resource.Error -> {
+                        ErrorLayout(conferenceListResult.error) {
+                            viewModel.loadData(isRefresh = false)
+                        }
+                    }
+                    else -> {}
                 }
             }
+
+            // added pull to refresh here
+            PullRefreshIndicator(
+                refreshing = isRefreshing,
+                state = pullRefreshState,
+                modifier = Modifier.constrainAs(pullRefresh) {
+                    top.linkTo(parent.top)
+                    centerHorizontallyTo(parent)
+                }
+            )
         }
-
     }
+}
 
+private fun loadData(viewModel: ConferenceListViewModel, isPullToRefresh: Boolean) {
+    viewModel.loadData(isRefresh = isPullToRefresh)
 }
 
 @Composable
-private fun SuccessLayout(data: ConferenceListResult, paddingValues: PaddingValues) {
+private fun SuccessLayout(
+    data: ConferenceListResult,
+    paddingValues: PaddingValues,
+    navController: NavController
+) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -112,7 +167,13 @@ private fun SuccessLayout(data: ConferenceListResult, paddingValues: PaddingValu
         val size = list.size
         items(size) { index ->
             val item = list[index]
-            ConferenceListItem(conferenceItem = item)
+            ConferenceListItem(conferenceItem = item) {
+                navController.navigate(
+                    ConferenceListFragmentDirections.actionConferenceListFragmentToConferenceDetailFragment(
+                        data = item
+                    )
+                )
+            }
             if (index != size - 1) {
                 Divider()
             }
@@ -121,7 +182,7 @@ private fun SuccessLayout(data: ConferenceListResult, paddingValues: PaddingValu
 }
 
 @Composable
-private fun LoadingLayout() {
+private fun LoadingLayout(loadingMessage: String) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -130,7 +191,7 @@ private fun LoadingLayout() {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = stringResource(id = R.string.loading),
+            text = loadingMessage,
             style = MaterialTheme.typography.h6.copy(
                 color = Color.DarkGray
             )
@@ -143,6 +204,7 @@ private fun ErrorLayout(error: String, retry: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(all = 16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -169,11 +231,14 @@ private fun ErrorLayout(error: String, retry: () -> Unit) {
 }
 
 @Composable
-private fun ConferenceListItem(conferenceItem: Data) {
+private fun ConferenceListItem(conferenceItem: Data, onClick: (Data) -> Unit) {
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable {
+                onClick(conferenceItem)
+            }
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

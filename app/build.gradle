@@ -1,6 +1,8 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
+    id 'kotlin-parcelize'
+    id 'androidx.navigation.safeargs.kotlin'
 }
 
 android {
@@ -9,7 +11,7 @@ android {
 
     defaultConfig {
         applicationId "com.va.conferenceguide"
-        minSdk 24
+        minSdk 23
         targetSdk 33
         versionCode 1
         versionName "1.0"
@@ -58,6 +60,8 @@ dependencies {
 
     // Compose Material Library
     implementation 'androidx.compose.material:material'
+    // compose constraint layout
+    implementation "androidx.constraintlayout:constraintlayout-compose:1.0.1"
     // Navigation
     implementation "androidx.navigation:navigation-fragment-ktx:2.5.3"
     implementation "androidx.navigation:navigation-ui-ktx:2.5.3"

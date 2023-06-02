@@ -7,5 +7,20 @@
     <fragment
         android:id="@+id/conferenceListFragment"
         android:name="com.va.conferenceguide.ui.ConferenceListFragment"
-        android:label="ConferenceListFragment" />
+        android:label="ConferenceListFragment">
+        <action
+            android:id="@+id/action_conferenceListFragment_to_conferenceDetailFragment"
+            app:destination="@id/conferenceDetailFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/conferenceDetailFragment"
+        android:name="com.va.conferenceguide.ui.ConferenceDetailFragment"
+        android:label="ConferenceDetailFragment">
+
+        <argument
+            android:name="data"
+            app:argType="com.va.conferenceguide.data.models.Data"
+            app:nullable="false" />
+
+    </fragment>
 </navigation>
